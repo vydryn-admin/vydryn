@@ -1,0 +1,617 @@
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;}
+html,body,#root{margin:0;height:100%;}
+body{background:#05030b;color:#f0ecff;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;}
+button,input{font:inherit;}
+button{cursor:pointer;}
+
+/* ── Tokens ───────────────────────────────────────────────────────────────── */
+:root{
+  --bg:#05030b;
+  --panel:rgba(10,7,22,0.92);
+  --border:rgba(255,255,255,0.07);
+  --border-h:rgba(255,255,255,0.15);
+  --txt:#f0ecff;
+  --muted:#7a7098;
+  --fine:#45405e;
+  --pink:#ff2bd6;
+  --violet:#7b2fff;
+  --cyan:#21ffe2;
+  --t:.14s ease;
+}
+
+/* ── Shell ────────────────────────────────────────────────────────────────── */
+.app{height:100%;display:flex;background:radial-gradient(circle at 15% 0%,rgba(124,60,255,.07),transparent 36%),var(--bg);}
+.app--landing{flex-direction:column;}
+.app--studio{flex-direction:row;}
+
+/* ── Stage ────────────────────────────────────────────────────────────────── */
+.stage{flex:1;display:grid;place-items:center;padding:24px;min-width:0;}
+.app--landing .stage{padding:0;}
+
+/* ── Frame ────────────────────────────────────────────────────────────────── */
+.frame{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(80,40,160,.18);background:#000;transition:box-shadow .3s;}
+.frame--landing{width:100%!important;height:100%!important;border-radius:0;border:none;box-shadow:none;}
+canvas{display:block;width:100%;height:100%;background:#000;}
+
+/* ── HUD ──────────────────────────────────────────────────────────────────── */
+.hud{position:absolute;inset:0 0 auto 0;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;background:linear-gradient(to bottom,rgba(5,3,11,.5),transparent);}
+.hud-brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;letter-spacing:-.03em;opacity:.85;}
+.hud-status{font:10px 'IBM Plex Mono',ui-monospace,monospace;color:var(--cyan);letter-spacing:.14em;text-transform:uppercase;text-shadow:0 0 10px var(--cyan);opacity:.7;}
+.hud-status--rec{color:#ff7070;text-shadow:0 0 10px #ff7070;}
+
+/* ── Drop zone ────────────────────────────────────────────────────────────── */
+.drop-zone{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);padding:9px 20px;border:1px dashed rgba(255,255,255,.14);border-radius:999px;background:rgba(5,3,11,.48);color:var(--muted);font-size:12px;backdrop-filter:blur(12px);cursor:pointer;white-space:nowrap;transition:border-color var(--t),color var(--t);}
+.drop-zone:hover{color:var(--txt);border-color:rgba(255,255,255,.26);}
+.file-input{display:none;}
+
+/* ── Product heartbeat dot (instrument identity) ─────────────────────────── */
+.pulse-dot{position:relative;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff 0%,#fff 13%,transparent 42%),radial-gradient(circle at 38% 35%,#ff8c40 17%,#cc44ff 56%,#1a0820 82%);box-shadow:0 0 9px rgba(200,68,255,.28);flex-shrink:0;}
+.pulse-dot--sm{width:11px;height:11px;}
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+.panel{width:300px;flex-shrink:0;border-left:1px solid var(--border);background:var(--panel);backdrop-filter:blur(24px);padding:0 20px 28px;overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;}
+.panel::-webkit-scrollbar{display:none;}
+
+.panel-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px;letter-spacing:-.04em;padding:20px 0 18px;}
+
+/* Sections use whitespace — no borders */
+.panel-section{padding:0 0 24px;}
+.panel-section--export{margin-top:auto;padding-top:22px;}
+
+.panel-label{font:9px 'IBM Plex Mono',ui-monospace,monospace;text-transform:uppercase;letter-spacing:.18em;color:var(--cyan);margin-bottom:13px;opacity:.55;}
+
+/* ── Style cards ──────────────────────────────────────────────────────────── */
+.style-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:4px;}
+.style-card{padding:13px 12px 11px;border-radius:11px;border:1px solid var(--border);background:rgba(255,255,255,.02);text-align:left;display:flex;flex-direction:column;gap:5px;transition:border-color var(--t),background var(--t),transform var(--t),box-shadow var(--t);animation:cardIn .22s ease both;}
+.style-card:hover{border-color:var(--border-h);background:rgba(255,255,255,.05);transform:translateY(-1px);}
+.style-card:active{transform:scale(.97);}
+.style-card--active{border-color:var(--pink);background:rgba(255,43,214,.06);box-shadow:0 0 0 1px var(--pink),0 4px 20px rgba(255,43,214,.10);}
+.style-card--active:hover{transform:none;}
+.style-card__name{font-size:13px;font-weight:700;color:var(--txt);letter-spacing:-.01em;}
+.style-card__desc{font-size:10px;color:var(--muted);line-height:1.4;}
+.style-card:nth-child(1){animation-delay:0ms;}
+.style-card:nth-child(2){animation-delay:50ms;}
+.style-card:nth-child(3){animation-delay:100ms;}
+.style-card:nth-child(4){animation-delay:150ms;}
+.style-card:nth-child(5){animation-delay:200ms;}
+@keyframes cardIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+/* ── Sliders ──────────────────────────────────────────────────────────────── */
+.ctrl{margin:0 0 12px;}
+.ctrl--primary{margin-bottom:0;}
+.ctrl-label{display:flex;justify-content:space-between;font:11px 'IBM Plex Mono',ui-monospace,monospace;color:var(--muted);margin-bottom:7px;}
+.ctrl-value{color:var(--cyan);opacity:0.15;transition:opacity 0.12s ease;}
+input[type=range]{width:100%;appearance:none;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--violet),var(--cyan));outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;background:#fff;border-radius:50%;box-shadow:0 0 10px rgba(255,255,255,.6);transition:transform var(--t);}
+input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.2);}
+
+/* ── Advanced ─────────────────────────────────────────────────────────────── */
+.advanced-toggle{display:block;background:none;border:none;color:var(--fine);font:10px 'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.08em;padding:0 0 14px;transition:color var(--t);}
+.advanced-toggle:hover{color:var(--muted);}
+.advanced-controls{animation:fadeIn .18s ease;}
+
+/* ── Swatches ─────────────────────────────────────────────────────────────── */
+.swatch-row{display:flex;gap:7px;flex-wrap:wrap;}
+.swatch{width:28px;height:28px;border-radius:7px;border:2px solid transparent;transition:border-color var(--t),transform var(--t);padding:0;}
+.swatch:hover{transform:scale(1.1);}
+.swatch--active{border-color:#fff;}
+
+/* ── Format ───────────────────────────────────────────────────────────────── */
+.btn-group{display:flex;gap:6px;}
+.btn-fmt{flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--muted);font-size:12px;font-weight:600;transition:border-color var(--t),color var(--t),background var(--t);}
+.btn-fmt:hover{border-color:var(--border-h);color:var(--txt);}
+.btn-fmt:active{transform:scale(.96);}
+.btn-fmt--active{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.07);color:var(--txt);}
+
+/* ── Transport ────────────────────────────────────────────────────────────── */
+.track-name{font-size:11px;color:var(--muted);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.transport{display:flex;gap:6px;margin-bottom:9px;}
+.transport-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--txt);font-size:13px;display:flex;align-items:center;justify-content:center;transition:border-color var(--t),background var(--t),transform var(--t);}
+.transport-btn:hover{border-color:var(--border-h);background:rgba(255,255,255,.08);}
+.transport-btn:active{transform:scale(.92);}
+.transport-btn--primary{background:linear-gradient(135deg,var(--pink),var(--violet));border:none;box-shadow:0 4px 14px rgba(255,43,214,.2);}
+.transport-btn--primary:hover{filter:brightness(1.1);}
+.seek-row{display:flex;align-items:center;gap:8px;}
+.seek-bar{flex:1;}
+.seek-time{font:10px 'IBM Plex Mono',ui-monospace,monospace;color:var(--fine);min-width:34px;}
+.seek-row .seek-time:last-child{text-align:right;}
+
+/* ── Export ───────────────────────────────────────────────────────────────── */
+.creator-badge{font-size:11px;font-weight:600;color:var(--violet);border:1px solid rgba(123,47,255,.28);background:rgba(123,47,255,.08);border-radius:8px;padding:6px 11px;margin-bottom:9px;display:inline-block;}
+.btn-export{width:100%;padding:14px 0;border-radius:12px;border:none;background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;font-size:14px;font-weight:700;box-shadow:0 8px 28px rgba(255,43,214,.22);transition:filter var(--t),transform var(--t),box-shadow var(--t);}
+.btn-export:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 12px 32px rgba(255,43,214,.30);}
+.btn-export:active{transform:scale(.97);}
+.btn-export:disabled{opacity:.35;box-shadow:none;transform:none;}
+@keyframes rec-ring{0%{box-shadow:0 0 0 0 rgba(255,70,70,.35);}70%{box-shadow:0 0 0 10px rgba(255,70,70,0);}100%{box-shadow:0 0 0 0 rgba(255,70,70,0);}}
+.btn-export--stop{background:rgba(255,60,60,.14);border:1px solid rgba(255,60,60,.28);color:#ff8080;box-shadow:none;animation:rec-ring 1.6s ease infinite;}
+.btn-export--stop:hover{filter:brightness(1.12);box-shadow:none;transform:none;}
+.export-note{margin-top:9px;font-size:11px;color:var(--fine);line-height:1.55;}
+
+/* ── Landing ──────────────────────────────────────────────────────────────── */
+.landing{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;}
+.landing__vignette{position:absolute;inset:0;background:radial-gradient(ellipse 75% 75% at 50% 55%,rgba(5,3,11,.08),rgba(5,3,11,.70));pointer-events:none;}
+.landing--drag .landing__vignette{background:rgba(123,47,255,.10);border:2px solid rgba(123,47,255,.4);}
+.landing__content{position:relative;z-index:1;text-align:center;display:flex;flex-direction:column;align-items:center;}
+.landing__logo{display:flex;align-items:center;gap:14px;margin-bottom:6px;}
+/* .pulse-wordmark replaced by .vydryn-wordmark */
+.landing__headline{font-size:clamp(30px,4.5vw,54px);font-weight:700;letter-spacing:-.04em;line-height:1.06;color:#fff;margin:24px 0 32px;text-shadow:0 2px 24px rgba(0,0,0,.5);}
+.landing__body{font-size:clamp(14px,1.8vw,17px);color:rgba(255,255,255,.48);line-height:1.5;max-width:380px;margin:0 0 38px;display:none;}
+.landing__cta{padding:16px 44px;background:linear-gradient(135deg,var(--pink),var(--violet));border:none;border-radius:14px;font-size:15px;font-weight:700;color:#fff;box-shadow:0 10px 36px rgba(255,43,214,.30),0 4px 12px rgba(0,0,0,.28);transition:transform .12s,filter .12s,box-shadow .12s;}
+.landing__cta:hover{transform:translateY(-2px);filter:brightness(1.08);animation:none;box-shadow:0 14px 44px rgba(255,43,214,.42);}
+.landing__cta:active{transform:scale(.97);}
+
+/* ── Export dialog ────────────────────────────────────────────────────────── */
+.ed-backdrop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.80);backdrop-filter:blur(22px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease;}
+.ed-card{width:100%;max-width:410px;background:rgba(10,7,22,.97);border:1px solid var(--border);border-radius:22px;padding:30px 26px 24px;position:relative;box-shadow:0 40px 100px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04);}
+.ed-thumb-wrap{margin-bottom:18px;border-radius:10px;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center;max-height:160px;}
+.ed-thumb{display:block;max-width:100%;max-height:160px;object-fit:contain;}
+.ed-title{font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--txt);margin:0 0 5px;}
+.ed-sub{color:var(--muted);font-size:13px;margin:0 0 22px;}
+.ed-sub--anim{animation:fadeMsg .32s ease;}
+.ed-option{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:5px 0;}
+.ed-option-featured{padding:12px 0;}
+.ed-option-meta{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+.ed-price{font-size:18px;font-weight:700;letter-spacing:-.02em;color:var(--txt);}
+.ed-price-accent{color:var(--pink);}
+.ed-price-mo{font-size:11px;font-weight:400;opacity:.55;}
+.ed-option-name{font-size:13px;font-weight:600;color:var(--txt);}
+.ed-option-fine{font:10.5px 'IBM Plex Mono',ui-monospace,monospace;color:var(--fine);}
+.ed-rule{height:1px;background:var(--border);margin:4px 0;}
+.ed-btn-ghost{flex-shrink:0;padding:8px 15px;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--txt);font-size:13px;font-weight:600;white-space:nowrap;transition:border-color var(--t),background var(--t);}
+.ed-btn-ghost:hover{border-color:var(--border-h);background:rgba(255,255,255,.09);}
+.ed-btn-ghost:active{transform:scale(.96);}
+.ed-btn-primary{flex-shrink:0;padding:8px 15px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;font-size:13px;font-weight:700;white-space:nowrap;box-shadow:0 4px 18px rgba(255,43,214,.28);transition:filter var(--t);}
+.ed-btn-primary:hover{filter:brightness(1.08);}
+.ed-btn-primary:active{transform:scale(.96);}
+.ed-close{position:absolute;top:13px;right:13px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;transition:border-color var(--t),color var(--t);}
+.ed-close:hover{border-color:var(--border-h);color:var(--txt);}
+.ed-center{text-align:center;padding:22px 0;}
+.ed-center--done .ed-check{animation:checkReveal .22s ease-out both;}
+.ed-check{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--violet));display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;margin:0 auto 14px;box-shadow:0 0 26px rgba(255,43,214,.36);}
+.ed-progress-ring{position:relative;width:64px;height:64px;margin:0 auto;}
+.ed-ring-svg{width:64px;height:64px;transform:rotate(-90deg);}
+.ed-ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:3;}
+.ed-ring-fill{fill:none;stroke:var(--pink);stroke-width:3;stroke-linecap:round;stroke-dasharray:138.2;stroke-dashoffset:138.2;transition:stroke-dashoffset .1s linear;}
+.ed-ring-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:11px 'IBM Plex Mono',ui-monospace,monospace;color:var(--cyan);}
+.ed-progress-track{height:3px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:18px;}
+.ed-progress-fill{height:100%;background:linear-gradient(90deg,var(--pink),var(--violet));border-radius:99px;transition:width .1s linear;}
+
+/* ── Payment sheet ────────────────────────────────────────────────────────── */
+.ps-overlay{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .18s ease;}
+@media(min-width:520px){.ps-overlay{align-items:center;}}
+.ps-sheet{width:100%;max-width:390px;background:rgba(12,8,26,.98);border:1px solid var(--border);border-radius:22px 22px 0 0;padding:34px 26px 38px;display:flex;flex-direction:column;align-items:center;gap:11px;text-align:center;box-shadow:0 -16px 50px rgba(0,0,0,.5);}
+@media(min-width:520px){.ps-sheet{border-radius:22px;}}
+.ps-spinner{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.1);border-top-color:var(--pink);animation:spin .7s linear infinite;}
+.ps-icon{width:50px;height:50px;border-radius:13px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.ps-title{font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--txt);margin:0;}
+.ps-body{font-size:13.5px;color:var(--muted);line-height:1.55;max-width:290px;margin:0;}
+.ps-cancel{background:none;border:none;color:var(--fine);font-size:12px;text-decoration:underline;text-decoration-color:rgba(69,64,94,.4);transition:color var(--t);}
+.ps-cancel:hover{color:var(--muted);}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 10px 36px rgba(255,43,214,.30),0 4px 12px rgba(0,0,0,.28);}50%{box-shadow:0 10px 36px rgba(255,43,214,.50),0 0 0 8px rgba(255,43,214,.07);}}
+@keyframes checkReveal{from{filter:brightness(0.08);transform:scale(0.92);}to{filter:brightness(1);transform:scale(1);}}
+@keyframes fadeMsg{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+
+/* ── Mobile ───────────────────────────────────────────────────────────────── */
+@media(max-width:900px){
+  .panel{position:fixed;right:0;top:0;bottom:0;width:min(300px,92vw);z-index:20;transform:translateX(calc(100% - 44px));transition:transform .2s ease;border-radius:18px 0 0 18px;}
+  .panel:hover{transform:translateX(0);}
+}
+
+/* ── Style preview canvases ──────────────────────────────────────────────── */
+.style-canvas-wrap {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 7px;
+  background: #010007;
+  /* Subtle inner shadow so canvas floats in the card */
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+.style-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Remove the generic canvas height override for previews */
+}
+/* Card is now taller to accommodate preview canvas */
+.style-card {
+  padding: 10px 10px 9px;
+}
+.style-card__name {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--txt);
+  letter-spacing: -.01em;
+  text-align: center;
+}
+/* Remove the old .style-card__desc — previews communicate it visually */
+.style-card__desc { display: none; }
+
+/* ── Landing exit animation ──────────────────────────────────────────────── */
+.landing--exiting {
+  animation: landingExit 0.38s cubic-bezier(.4,0,1,1) both;
+  pointer-events: none;
+}
+@keyframes landingExit {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(1.025); }
+}
+
+/* ── Studio panel entrance ───────────────────────────────────────────────── */
+/* Plays once when panel mounts (hasAudio goes true) */
+.panel {
+  animation: panelEnter 0.28s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes panelEnter {
+  from { transform: translateX(18px); filter: brightness(0.12) saturate(0); }
+  to   { transform: translateX(0);    filter: brightness(1) saturate(1); }
+}
+
+/* ── Frame entrance (studio canvas frame) ────────────────────────────────── */
+.frame:not(.frame--landing) {
+  animation: frameSettle 0.32s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes frameSettle {
+  from { transform: scale(0.976); filter: brightness(0.15); }
+  to   { transform: scale(1);    filter: brightness(1); }
+}
+
+/* ── HUD fade in ─────────────────────────────────────────────────────────── */
+.hud { animation: hudReveal 0.28s ease-out 0.08s both; }
+@keyframes hudReveal {
+  from { filter: brightness(0.06) saturate(0); }
+  to   { filter: brightness(1) saturate(1); }
+}
+
+/* ── Export button pulse (while idle with audio loaded) ─────────────────── */
+/* Subtle invitation to export */
+@keyframes exportInvite {
+  0%,100% { box-shadow: 0 8px 28px rgba(255,43,214,.22); }
+  50%      { box-shadow: 0 8px 28px rgba(255,43,214,.38), 0 0 0 3px rgba(255,43,214,.08); }
+}
+/* Apply only to non-recording state — remove once user records */
+
+/* ── Brand behaviour ─────────────────────────────────────────────────────── */
+
+/* ── Pulse dot acknowledgement ────────────────────────────────────────────── */
+/* Law 2: The mark only acknowledges meaningful creative moments.
+   A second pulse appears at a tiny offset. 140ms. No loop. Then stillness. */
+.pulse-dot--acknowledge::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%,
+    rgba(255,255,255,0.85) 0%,
+    rgba(255,140,64,0.7)   40%,
+    transparent 100%
+  );
+  animation: dotSecondPulse 100ms cubic-bezier(0.2, 0, 0.8, 1) both;
+  pointer-events: none;
+}
+.pulse-dot--sm.pulse-dot--acknowledge::after {
+  top: -2px;
+  right: -2px;
+  width: 4px;
+  height: 4px;
+}
+@keyframes dotSecondPulse {
+  /* Instant presence, then quiet departure. No scale. No bounce. */
+  0%   { opacity: 0; }
+  18%  { opacity: 0.55; }
+  100% { opacity: 0; }
+}
+
+/* ── Landing brand reveal (staggered emergence) ──────────────────────────── */
+/* Law 1: Elements reveal themselves. Not through opacity — through emergence. */
+@keyframes brandReveal {
+  from { filter: brightness(0.08) saturate(0); }
+  to   { filter: brightness(1) saturate(1); }
+}
+.landing__logo     { animation: brandReveal 0.65s ease-out 0.05s both; }
+.landing__headline { animation: brandReveal 0.55s ease-out 0.16s both; }
+.landing__body     { animation: brandReveal 0.65s ease-out 0.32s both; }
+.landing__cta      { animation: brandReveal 0.45s ease-out 0.34s both; }
+/* Law 3: No looping on the CTA — it is still after revelation */
+
+/* ── Style preview cards emerge on panel load ─────────────────────────────── */
+/* Each card reveals fractionally after the panel itself */
+
+.style-card:nth-child(2) { animation-delay: 40ms; }
+.style-card:nth-child(3) { animation-delay: 80ms; }
+.style-card:nth-child(4) { animation-delay: 120ms; }
+.style-card:nth-child(5) { animation-delay: 160ms; }
+/* cardIn is brightness-based in spirit but the scale is kept for spatial clarity */
+
+@keyframes advancedReveal {
+  from { filter: brightness(0.25); }
+  to   { filter: brightness(1); }
+}
+
+/* ── First-time experience ───────────────────────────────────────────────── */
+
+/* Format hint on landing — answers "what can I upload?" without reading docs */
+.landing__formats {
+  font: 9px 'IBM Plex Mono', ui-monospace, monospace;
+  color: rgba(255,255,255,0.22);
+  letter-spacing: .10em;
+  margin: -18px 0 0;
+  pointer-events: none;
+  animation: brandReveal 0.5s ease-out 0.58s both;
+}
+
+/* Loading state on CTA */
+.landing__cta--loading {
+  opacity: 0.65;
+  cursor: default;
+}
+.landing__cta--loading::after {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  margin-left: 8px;
+  vertical-align: middle;
+  animation: loadingDot 0.8s ease infinite;
+}
+@keyframes loadingDot {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50%       { opacity: 1;   transform: scale(1.1); }
+}
+
+/* Recording timer in HUD — slightly wider for the time display */
+.hud-status--rec {
+  font-variant-numeric: tabular-nums;
+  min-width: 52px;
+  text-align: right;
+}
+
+/* ── Error toast — production hardening ─────────────────────────────────── */
+.app-error {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(20, 8, 8, 0.92);
+  border: 1px solid rgba(255, 80, 80, 0.4);
+  border-radius: 12px;
+  padding: 12px 18px 12px 16px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: emerge 0.2s ease both;
+  cursor: pointer;
+  max-width: min(460px, 90vw);
+}
+.app-error span {
+  font-size: 13px;
+  color: rgba(255, 180, 180, 0.95);
+  line-height: 1.4;
+}
+.app-error button {
+  background: none;
+  border: none;
+  color: rgba(255,180,180,0.5);
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.app-error button:hover { color: rgba(255,180,180,0.9); }
+
+/* ── Accessibility: focus visible ────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Remove focus outline for mouse users but keep for keyboard */
+:focus:not(:focus-visible) { outline: none; }
+
+/* ── Reduced motion: respect system preference ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Keep the recording indicator functional */
+  .btn-export--stop { animation: none !important; }
+}
+
+/* ── Rhythm — Breath ─────────────────────────────────────────────────────── */
+
+/* ── Panel: enters 120ms after the canvas frame is settled ──────────────────
+   Rhythm: frame arrives (space opens) → stillness → panel arrives (tools come)
+   Without this delay the panel and frame compete for the eye simultaneously. */
+.panel {
+  animation-delay: 0.12s;
+}
+
+/* ── Style card: canvas responds first, card border confirms after ────────────
+   Rhythm: click → canvas flash (immediate) → card border lights (80ms later)
+   The world changes first. The UI follows. Not the other way around.         */
+.style-card--active {
+  transition:
+    border-color 0.18s 0.08s ease,   /* 80ms delay: canvas exhales first */
+    background   0.14s 0.06s ease,
+    box-shadow   0.18s 0.08s ease,
+    transform    var(--t);
+}
+
+/* ── Export button: smooth state transition — records, doesn't snap ──────────
+   Rhythm: press → brief beat → button breathes into its new state            */
+.btn-export {
+  transition:
+    filter        var(--t),
+    transform     var(--t),
+    box-shadow    var(--t),
+    background    0.14s ease,   /* smooth morph to stop-state */
+    color         0.14s ease,
+    border-color  0.14s ease;
+}
+/* The recording state arrives with a beat of delay — button commits before it transforms */
+.btn-export--stop {
+  transition-delay: 0.06s; /* 60ms: you pressed it, now it commits */
+}
+
+/* ── Export dialog: exits with the same language it entered ──────────────────
+   Law: Nothing suddenly disappears. Everything returns as it arrived.         */
+@keyframes cardExit {
+  from { filter: brightness(1);    transform: scale(1);    }
+  to   { filter: brightness(0.06); transform: scale(0.975); }
+}
+@keyframes backdropExit {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.ed-card--exiting {
+  animation: cardExit 0.18s ease-in both;
+  pointer-events: none;
+}
+.ed-backdrop--exiting {
+  animation: backdropExit 0.22s ease-in both;
+  pointer-events: none;
+}
+
+/* ── Landing CTA: press-and-release before loading ───────────────────────────
+   Rhythm: the button inhales on press, then exhales into "Loading…"          */
+.landing__cta:active {
+  transform: scale(0.96);
+  filter: brightness(0.88);
+  transition: transform 0.06s ease, filter 0.06s ease; /* fast inhale */
+}
+/* Recovery: slower exhale back to resting or loading state */
+.landing__cta {
+  transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+}
+
+/* ── RC1: Final instrument refinements ──────────────────────────────────── */
+
+/* ctrl-value: revealed on interaction, invisible at rest
+   The canvas is the readout. Numbers appear when you need them. */
+.ctrl-value--visible { opacity: 1 !important; }
+.ctrl--active .ctrl-label { color: var(--txt); transition: color 0.1s ease; }
+
+/* Export dialog: 'ready' phase — one breath before the decision */
+.ed-ready {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 16px 0 8px;
+}
+.ed-title--ready {
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: -.03em;
+}
+
+/* Export options entrance — arrive after the creator has had a moment */
+.ed-options {
+  animation: optionsReveal 0.38s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes optionsReveal {
+  from { filter: brightness(0.2); transform: translateY(6px); }
+  to   { filter: brightness(1);   transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   VYDRYN BRAND SYSTEM
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── VYDRYN wordmark ─────────────────────────────────────────────
+   The wordmark IS the logo. No icon. No symbol. Only the name.
+   Wider tracking than the default — confident, not compressed.    */
+.vydryn-wordmark {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+/* Landing scale — larger, unhurried */
+.vydryn-wordmark--lg {
+  font-size: 42px;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(255,255,255,0.10);
+  line-height: 1;
+}
+
+/* Panel scale — refined, slightly smaller than before */
+.panel-brand .vydryn-wordmark {
+  font-size: 15px;
+  letter-spacing: 0.05em;
+}
+
+/* ── Y resonance points ──────────────────────────────────────────
+   The two Y letters carry the brand's hidden identity.
+   Two resonance points appear above them on meaningful events.
+   120–150ms. Then stillness. Never decorative. Always discovered. */
+.vy-y {
+  position: relative;
+  display: inline-block;
+}
+
+/* The resonance points — invisible at rest */
+.vy-y::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Smaller variant for panel */
+.panel-brand .vy-y::after {
+  width: 2px;
+  height: 2px;
+  top: -5px;
+}
+
+/* Resonance fires — both Y points illuminate simultaneously */
+.vydryn-resonance .vy-y::after {
+  animation: yResonate 145ms cubic-bezier(0.2, 0, 0.8, 1) both;
+}
+
+@keyframes yResonate {
+  0%   { opacity: 0;    }
+  22%  { opacity: 0.62; }  /* brief, sub-perceptual peak */
+  100% { opacity: 0;    }
+}
+
+/* ── Panel brand spacing with new wordmark ───────────────────────
+   Override the negative letter-spacing from panel-brand parent.  */
+.panel-brand {
+  letter-spacing: normal; /* parent had -.04em — reset for wordmark */
+}
+
+/* ── Landing tagline with updated copy ──────────────────────────
+   "Making sound visible." — present participle, more alive.       */
+.landing__headline {
+  /* No change needed — CSS class is the same */
+}
+
+.ps-error-actions{display:flex;gap:10px;margin-top:20px;justify-content:center;flex-wrap:wrap;}
