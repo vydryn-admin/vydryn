@@ -15,8 +15,9 @@ import { MockProvider } from './MockProvider';
  * To add Mollie: create MollieProvider implementing PaymentProvider,
  * then set VITE_PAYMENT_PROVIDER=mollie here.
  */
-const providerName = (import.meta.env.VITE_PAYMENT_PROVIDER as string | undefined)
-  ?? (import.meta.env.DEV ? 'mock' : 'stripe');
+const providerName =
+  (import.meta.env.VITE_PAYMENT_PROVIDER as string | undefined) ??
+  (import.meta.env.DEV ? 'mock' : 'stripe');
 
 export const paymentProvider =
   providerName === 'mock' ? new MockProvider() : new StripeProvider();
