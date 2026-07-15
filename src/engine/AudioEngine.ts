@@ -35,8 +35,13 @@ export class AudioEngine {
     this.analyser.connect(this.audioCtx.destination);
     this.analyser.connect(this.destNode);
 
-    this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
-    this.waveData = new Uint8Array(this.analyser.frequencyBinCount);
+    this.freqData = new Uint8Array(
+  new ArrayBuffer(this.analyser.frequencyBinCount)
+);
+
+this.waveData = new Uint8Array(
+  new ArrayBuffer(this.analyser.frequencyBinCount)
+);
     this._initialized = true;
   }
 
