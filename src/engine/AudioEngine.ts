@@ -8,8 +8,10 @@ export class AudioEngine {
   private analyser: AnalyserNode | null = null;
   private source: MediaElementAudioSourceNode | null = null;
   private destNode: MediaStreamAudioDestinationNode | null = null;
-  private freqData: Uint8Array = new Uint8Array(0);
-  private waveData: Uint8Array = new Uint8Array(0);
+  private freqData: Uint8Array<ArrayBuffer> =
+  new Uint8Array(new ArrayBuffer(0));
+  private waveData: Uint8Array<ArrayBuffer> =
+  new Uint8Array(new ArrayBuffer(0));
   private currentObjectURL: string | null = null;
 
   private bassAvg = 0;
